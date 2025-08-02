@@ -3318,7 +3318,7 @@ def show_enterprise_custom_rules():
         st.subheader("➕ Create New Fraud Detection Rule")
         
         # Rule builder
-        with st.form("new_rule"):
+        with st.form("new_rule_form"):
             col1, col2 = st.columns(2)
             
             with col1:
@@ -3342,99 +3342,103 @@ def show_enterprise_custom_rules():
                 rule_enabled = st.checkbox("Enable Rule Immediately", value=False)
                 testing_mode = st.checkbox("Start in Testing Mode", value=True)
         
-        # Condition builder
-        st.markdown("### 🔧 Condition Builder")
-        
-        condition_type = st.selectbox("Condition Type", ["Simple Condition", "Advanced Logic", "SQL-like Expression"])
-        
-        if condition_type == "Simple Condition":
-            col1, col2, col3 = st.columns(3)
+            # Condition builder
+            st.markdown("### 🔧 Condition Builder")
             
-            with col1:
-                field = st.selectbox("Field", [
-                    "order_value", "days_since_purchase", "customer_return_count",
-                    "return_reason", "category", "return_hour", "day_of_week",
-                    "shipping_method", "customer_age_days"
-                ])
+            condition_type = st.selectbox("Condition Type", ["Simple Condition", "Advanced Logic", "SQL-like Expression"])
             
-            with col2:
-                operator = st.selectbox("Operator", [
-                    "equals", "greater_than", "less_than", "greater_equal",
-                    "less_equal", "contains", "not_contains", "in_list"
-                ])
-            
-            with col3:
-                if operator in ["contains", "not_contains"]:
-                    value = st.text_input("Value", placeholder="damage")
-                elif operator == "in_list":
-                    value = st.text_input("Values (comma-separated)", placeholder="Electronics,Clothing")
-                else:
-                    value = st.number_input("Value", value=0.0)
-        
-        elif condition_type == "Advanced Logic":
-            st.markdown("**Build complex conditions using AND/OR logic:**")
-            
-            # Multiple conditions
-            num_conditions = st.number_input("Number of conditions", min_value=1, max_value=5, value=2)
-            
-            conditions = []
-            for i in range(int(num_conditions)):
-                st.markdown(f"**Condition {i+1}:**")
-                col1, col2, col3, col4 = st.columns(4)
+            if condition_type == "Simple Condition":
+                col1, col2, col3 = st.columns(3)
                 
                 with col1:
-                    field = st.selectbox(f"Field {i+1}", [
+                    field = st.selectbox("Field", [
                         "order_value", "days_since_purchase", "customer_return_count",
-                        "return_reason", "category", "return_hour"
-                    ], key=f"field_{i}")
+                        "return_reason", "category", "return_hour", "day_of_week",
+                        "shipping_method", "customer_age_days"
+                    ])
                 
                 with col2:
-                    operator = st.selectbox(f"Operator {i+1}", [
-                        "equals", "greater_than", "less_than", "contains"
-                    ], key=f"op_{i}")
+                    operator = st.selectbox("Operator", [
+                        "equals", "greater_than", "less_than", "greater_equal",
+                        "less_equal", "contains", "not_contains", "in_list"
+                    ])
                 
                 with col3:
-                    value = st.text_input(f"Value {i+1}", key=f"val_{i}")
+                    if operator in ["contains", "not_contains"]:
+                        value = st.text_input("Value", placeholder="damage")
+                    elif operator == "in_list":
+                        value = st.text_input("Values (comma-separated)", placeholder="Electronics,Clothing")
+                    else:
+                        value = st.number_input("Value", value=0.0)
+            
+            elif condition_type == "Advanced Logic":
+                st.markdown("**Build complex conditions using AND/OR logic:**")
                 
-                with col4:
-                    if i < num_conditions - 1:
-                        logic = st.selectbox(f"Logic {i+1}", ["AND", "OR"], key=f"logic_{i}")
+                # Multiple conditions
+                num_conditions = st.number_input("Number of conditions", min_value=1, max_value=5, value=2)
                 
-                conditions.append({"field": field, "operator": operator, "value": value})
-        
-        else:  # SQL-like expression
-            st.markdown("**Enter SQL-like condition:**")
-            sql_condition = st.text_area(
-                "SQL Condition",
-                placeholder="order_value > 500 AND days_since_purchase <= 3 AND category = 'Electronics'",
-                help="Use field names: order_value, days_since_purchase, customer_return_count, return_reason, category, return_hour"
-            )
-        
-        # Rule testing
-        st.markdown("### 🧪 Test Rule")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("**Test with sample data:**")
-            test_order_value = st.number_input("Test Order Value", value=299.99)
-            test_days = st.number_input("Test Days Since Purchase", value=5)
-            test_return_count = st.number_input("Test Customer Return Count", value=2)
-            test_category = st.selectbox("Test Category", ["Electronics", "Clothing", "Home"])
-        
-        with col2:
-            if st.button("🧪 Test Rule"):
-                st.success("✅ Rule would trigger - adding 15 risk points")
-                st.info("📊 Estimated impact: 12 returns would be affected in last 30 days")
-        
-        # Submit rule
-        if st.form_submit_button("🚀 Create Rule", type="primary"):
-            if rule_name and rule_description:
-                st.success(f"✅ Rule '{rule_name}' created successfully!")
-                if testing_mode:
-                    st.info("🧪 Rule is now active in testing mode")
-            else:
-                st.error("Please fill in all required fields")
+                conditions = []
+                for i in range(int(num_conditions)):
+                    st.markdown(f"**Condition {i+1}:**")
+                    col1, col2, col3, col4 = st.columns(4)
+                    
+                    with col1:
+                        field = st.selectbox(f"Field {i+1}", [
+                            "order_value", "days_since_purchase", "customer_return_count",
+                            "return_reason", "category", "return_hour"
+                        ], key=f"field_{i}")
+                    
+                    with col2:
+                        operator = st.selectbox(f"Operator {i+1}", [
+                            "equals", "greater_than", "less_than", "contains"
+                        ], key=f"op_{i}")
+                    
+                    with col3:
+                        value = st.text_input(f"Value {i+1}", key=f"val_{i}")
+                    
+                    with col4:
+                        if i < num_conditions - 1:
+                            logic = st.selectbox(f"Logic {i+1}", ["AND", "OR"], key=f"logic_{i}")
+                    
+                    conditions.append({"field": field, "operator": operator, "value": value})
+            
+            else:  # SQL-like expression
+                st.markdown("**Enter SQL-like condition:**")
+                sql_condition = st.text_area(
+                    "SQL Condition",
+                    placeholder="order_value > 500 AND days_since_purchase <= 3 AND category = 'Electronics'",
+                    help="Use field names: order_value, days_since_purchase, customer_return_count, return_reason, category, return_hour"
+                )
+            
+            # Rule testing
+            st.markdown("### 🧪 Test Rule")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Test with sample data:**")
+                test_order_value = st.number_input("Test Order Value", value=299.99)
+                test_days = st.number_input("Test Days Since Purchase", value=5)
+                test_return_count = st.number_input("Test Customer Return Count", value=2)
+                test_category = st.selectbox("Test Category", ["Electronics", "Clothing", "Home"])
+            
+            with col2:
+                st.markdown("**Test Results Preview:**")
+                st.info("Click 'Create Rule' to save and test the rule")
+            
+            # Submit button - MUST be inside the form
+            submitted = st.form_submit_button("🚀 Create Rule", type="primary")
+            
+            if submitted:
+                if rule_name and rule_description:
+                    st.success(f"✅ Rule '{rule_name}' created successfully!")
+                    if testing_mode:
+                        st.info("🧪 Rule is now active in testing mode")
+                    # Simulate test results
+                    st.success("✅ Rule would trigger - adding 15 risk points")
+                    st.info("📊 Estimated impact: 12 returns would be affected in last 30 days")
+                else:
+                    st.error("Please fill in all required fields")
     
     with tab3:
         st.subheader("📊 Rule Performance Analytics")
@@ -3462,15 +3466,19 @@ def show_enterprise_custom_rules():
         
         with col2:
             # Rule accuracy distribution
-            accuracies = [rule['accuracy'] for rule in rules if rule['accuracy'] > 0]
-            
-            fig = px.histogram(
-                x=accuracies,
-                title="Rule Accuracy Distribution",
-                labels={'x': 'Accuracy (%)', 'y': 'Number of Rules'},
-                nbins=10
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            try:
+                import plotly.express as px
+                accuracies = [rule['accuracy'] for rule in rules if rule['accuracy'] > 0]
+                
+                fig = px.histogram(
+                    x=accuracies,
+                    title="Rule Accuracy Distribution",
+                    labels={'x': 'Accuracy (%)', 'y': 'Number of Rules'},
+                    nbins=10
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            except:
+                st.info("📊 Chart would be displayed here")
         
         with col3:
             # Recent rule triggers
@@ -3482,40 +3490,48 @@ def show_enterprise_custom_rules():
                 'Last 7d': [45, 38, 22, 18]
             }
             
+            import pandas as pd
             st.dataframe(pd.DataFrame(trigger_data), use_container_width=True)
         
         # Performance trends
         st.markdown("### 📈 Performance Trends")
         
-        # Simulate performance data over time
-        dates = pd.date_range(start=datetime.now() - timedelta(days=30), periods=30, freq='D')
-        
-        # Rule performance over time
-        rule_performance = {
-            'Serial Returner': np.random.normal(92, 3, 30),
-            'High Value Return': np.random.normal(89, 4, 30),
-            'Late Damage': np.random.normal(76, 5, 30)
-        }
-        
-        fig = go.Figure()
-        
-        colors = ['#2563eb', '#16a34a', '#dc2626']
-        for i, (rule_name, performance) in enumerate(rule_performance.items()):
-            fig.add_trace(go.Scatter(
-                x=dates,
-                y=performance,
-                mode='lines+markers',
-                name=rule_name,
-                line=dict(color=colors[i], width=2)
-            ))
-        
-        fig.update_layout(
-            title="Rule Accuracy Trends (30 Days)",
-            xaxis_title="Date",
-            yaxis_title="Accuracy (%)",
-            yaxis=dict(range=[60, 100])
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        try:
+            import plotly.graph_objects as go
+            import numpy as np
+            from datetime import datetime, timedelta
+            
+            # Simulate performance data over time
+            dates = pd.date_range(start=datetime.now() - timedelta(days=30), periods=30, freq='D')
+            
+            # Rule performance over time
+            rule_performance = {
+                'Serial Returner': np.random.normal(92, 3, 30),
+                'High Value Return': np.random.normal(89, 4, 30),
+                'Late Damage': np.random.normal(76, 5, 30)
+            }
+            
+            fig = go.Figure()
+            
+            colors = ['#2563eb', '#16a34a', '#dc2626']
+            for i, (rule_name, performance) in enumerate(rule_performance.items()):
+                fig.add_trace(go.Scatter(
+                    x=dates,
+                    y=performance,
+                    mode='lines+markers',
+                    name=rule_name,
+                    line=dict(color=colors[i], width=2)
+                ))
+            
+            fig.update_layout(
+                title="Rule Accuracy Trends (30 Days)",
+                xaxis_title="Date",
+                yaxis_title="Accuracy (%)",
+                yaxis=dict(range=[60, 100])
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        except:
+            st.info("📈 Performance trend chart would be displayed here")
         
         # Rule impact analysis
         st.markdown("### 💰 Financial Impact by Rule")
@@ -3529,14 +3545,17 @@ def show_enterprise_custom_rules():
         
         impact_df = pd.DataFrame(impact_data)
         
-        fig = px.bar(
-            impact_df,
-            x='Rule Name',
-            y='Savings ($)',
-            color='Fraud Prevented',
-            title="Financial Impact by Rule (Last 30 Days)"
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        try:
+            fig = px.bar(
+                impact_df,
+                x='Rule Name',
+                y='Savings ($)',
+                color='Fraud Prevented',
+                title="Financial Impact by Rule (Last 30 Days)"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        except:
+            st.dataframe(impact_df, use_container_width=True)
     
     with tab4:
         st.subheader("🔧 Advanced Rule Settings")
@@ -3604,6 +3623,7 @@ def show_enterprise_custom_rules():
                 review_auto_rules = st.checkbox("Require manual review for auto-generated rules", value=True)
                 
                 if st.button("🚀 Generate Rules from Patterns"):
+                    import time
                     with st.spinner("Analyzing fraud patterns..."):
                         time.sleep(3)
                         st.success("✅ 3 potential rules identified and added to review queue")
@@ -3618,13 +3638,14 @@ def show_enterprise_custom_rules():
                 optimization_metric = st.selectbox("Optimization target", ["Accuracy", "F1-Score", "Precision", "Recall"])
                 
                 if st.button("⚡ Optimize Rules Now"):
+                    import time
                     with st.spinner("Optimizing rule parameters..."):
                         time.sleep(2)
                         st.success("✅ 5 rules optimized with improved performance")
         
         if st.button("💾 Save Advanced Settings", type="primary"):
             st.success("✅ Advanced settings saved successfully!")
-
+            
 def show_enterprise_audit_logs():
     """Enterprise audit logs and compliance"""
     
