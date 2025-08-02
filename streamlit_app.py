@@ -13,8 +13,15 @@ import anthropic
 import requests
 from typing import Dict, List, Optional
 import smtplib
-from email.mime.text import MimeText
-from email.mime.multipart import MimeMultipart
+try:
+    from email.mime.text import MIMEText as MimeText
+    from email.mime.multipart import MIMEMultipart as MimeMultipart
+    EMAIL_AVAILABLE = True
+except ImportError:
+    # Email functionality not available
+    EMAIL_AVAILABLE = False
+    MimeText = None
+    MimeMultipart = None
 import jwt
 import bcrypt
 from functools import wraps
