@@ -4149,15 +4149,15 @@ def show_enterprise_reports():
                     col_a, col_b, col_c = st.columns(3)
                     
                     with col_a:
-                        if st.button("📊 Generate", key=f"gen_{report['name']}"):
+                        if st.button("📊 Generate", key=f"gen_fraud_{report['name'].replace(' ', '_')}"):
                             st.info(f"Generating {report['name']}...")
                     
                     with col_b:
-                        if st.button("📧 Email", key=f"email_{report['name']}"):
+                        if st.button("📧 Email", key=f"email_fraud_{report['name'].replace(' ', '_')}"):
                             st.info(f"Emailing {report['name']}...")
                     
                     with col_c:
-                        if st.button("⚙️ Configure", key=f"config_{report['name']}"):
+                        if st.button("⚙️ Configure", key=f"config_fraud_{report['name'].replace(' ', '_')}"):
                             st.info(f"Configuring {report['name']}...")
         
         with col2:
@@ -4204,15 +4204,15 @@ def show_enterprise_reports():
                     col_a, col_b, col_c = st.columns(3)
                     
                     with col_a:
-                        if st.button("📊 Generate", key=f"gen_{report['name']}"):
+                        if st.button("📊 Generate", key=f"gen_perf_{report['name'].replace(' ', '_')}"):
                             st.info(f"Generating {report['name']}...")
                     
                     with col_b:
-                        if st.button("📧 Email", key=f"email_{report['name']}"):
+                        if st.button("📧 Email", key=f"email_perf_{report['name'].replace(' ', '_')}"):
                             st.info(f"Emailing {report['name']}...")
                     
                     with col_c:
-                        if st.button("⚙️ Configure", key=f"config_{report['name']}"):
+                        if st.button("⚙️ Configure", key=f"config_perf_{report['name'].replace(' ', '_')}"):
                             st.info(f"Configuring {report['name']}...")
         
         # Quick report generation
@@ -4226,21 +4226,22 @@ def show_enterprise_reports():
             quick_report_type = st.selectbox("Select Report", [
                 "Fraud Summary", "Performance Metrics", "Customer Analysis",
                 "Financial Impact", "Rule Performance", "Compliance Status"
-            ])
+            ], key="quick_report_type")
         
         with col2:
             st.markdown("**📅 Time Period**")
             time_period = st.selectbox("Period", [
                 "Last 24 hours", "Last 7 days", "Last 30 days", 
                 "Last 90 days", "Year to date", "Custom range"
-            ])
+            ], key="quick_time_period")
         
         with col3:
             st.markdown("**📄 Format**")
-            report_format = st.selectbox("Format", ["PDF", "Excel", "CSV", "PowerPoint"])
+            report_format = st.selectbox("Format", ["PDF", "Excel", "CSV", "PowerPoint"], key="quick_report_format")
         
-        if st.button("🚀 Generate Quick Report", type="primary"):
+        if st.button("🚀 Generate Quick Report", type="primary", key="generate_quick_report"):
             with st.spinner(f"Generating {quick_report_type} report..."):
+                import time
                 time.sleep(3)
                 st.success("✅ Report generated successfully!")
                 
@@ -4249,7 +4250,8 @@ def show_enterprise_reports():
                     "📥 Download Report",
                     b"Sample report content",
                     f"{quick_report_type.lower().replace(' ', '_')}_report.{report_format.lower()}",
-                    f"application/{report_format.lower()}"
+                    f"application/{report_format.lower()}",
+                    key="download_quick_report"
                 )
     
     with tab2:
@@ -4261,56 +4263,57 @@ def show_enterprise_reports():
         with col1:
             st.markdown("### 📋 Report Configuration")
             
-            custom_report_name = st.text_input("Report Name", placeholder="My Custom Report")
-            custom_description = st.text_area("Description", placeholder="Describe what this report includes...")
+            custom_report_name = st.text_input("Report Name", placeholder="My Custom Report", key="custom_report_name")
+            custom_description = st.text_area("Description", placeholder="Describe what this report includes...", key="custom_description")
             
             # Data sources
             st.markdown("**📊 Data Sources**")
-            include_returns = st.checkbox("Returns Data", value=True)
-            include_customers = st.checkbox("Customer Data", value=True)
-            include_fraud_scores = st.checkbox("Fraud Scores", value=True)
-            include_rules = st.checkbox("Rule Performance", value=False)
-            include_financials = st.checkbox("Financial Impact", value=True)
+            include_returns = st.checkbox("Returns Data", value=True, key="include_returns")
+            include_customers = st.checkbox("Customer Data", value=True, key="include_customers")
+            include_fraud_scores = st.checkbox("Fraud Scores", value=True, key="include_fraud_scores")
+            include_rules = st.checkbox("Rule Performance", value=False, key="include_rules")
+            include_financials = st.checkbox("Financial Impact", value=True, key="include_financials")
             
             # Filters
             st.markdown("**🎛️ Filters**")
-            date_range_custom = st.date_input("Date Range", value=(date.today() - timedelta(days=30), date.today()))
-            risk_levels = st.multiselect("Risk Levels", ["HIGH", "MEDIUM", "LOW"], default=["HIGH", "MEDIUM"])
-            categories = st.multiselect("Product Categories", ["Electronics", "Clothing", "Home", "Beauty"])
+            from datetime import date, timedelta
+            date_range_custom = st.date_input("Date Range", value=(date.today() - timedelta(days=30), date.today()), key="date_range_custom")
+            risk_levels = st.multiselect("Risk Levels", ["HIGH", "MEDIUM", "LOW"], default=["HIGH", "MEDIUM"], key="risk_levels_custom")
+            categories = st.multiselect("Product Categories", ["Electronics", "Clothing", "Home", "Beauty"], key="categories_custom")
         
         with col2:
             st.markdown("### 📈 Visualizations")
             
             # Chart selections
             st.markdown("**📊 Charts to Include**")
-            chart_risk_distribution = st.checkbox("Risk Level Distribution", value=True)
-            chart_trends = st.checkbox("Trends Over Time", value=True)
-            chart_categories = st.checkbox("Category Analysis", value=False)
-            chart_customers = st.checkbox("Customer Analysis", value=False)
-            chart_financial = st.checkbox("Financial Impact", value=True)
+            chart_risk_distribution = st.checkbox("Risk Level Distribution", value=True, key="chart_risk_distribution")
+            chart_trends = st.checkbox("Trends Over Time", value=True, key="chart_trends")
+            chart_categories = st.checkbox("Category Analysis", value=False, key="chart_categories")
+            chart_customers = st.checkbox("Customer Analysis", value=False, key="chart_customers")
+            chart_financial = st.checkbox("Financial Impact", value=True, key="chart_financial")
             
             # Report sections
             st.markdown("**📄 Report Sections**")
-            section_executive_summary = st.checkbox("Executive Summary", value=True)
-            section_detailed_analysis = st.checkbox("Detailed Analysis", value=True)
-            section_recommendations = st.checkbox("Recommendations", value=True)
-            section_appendix = st.checkbox("Data Appendix", value=False)
+            section_executive_summary = st.checkbox("Executive Summary", value=True, key="section_executive_summary")
+            section_detailed_analysis = st.checkbox("Detailed Analysis", value=True, key="section_detailed_analysis")
+            section_recommendations = st.checkbox("Recommendations", value=True, key="section_recommendations")
+            section_appendix = st.checkbox("Data Appendix", value=False, key="section_appendix")
             
             # Output options
             st.markdown("**⚙️ Output Options**")
-            custom_format = st.selectbox("Output Format", ["PDF", "Excel", "PowerPoint", "Word"])
-            include_raw_data = st.checkbox("Include Raw Data", value=False)
-            auto_schedule = st.checkbox("Schedule for Future Generation")
+            custom_format = st.selectbox("Output Format", ["PDF", "Excel", "PowerPoint", "Word"], key="custom_format")
+            include_raw_data = st.checkbox("Include Raw Data", value=False, key="include_raw_data")
+            auto_schedule = st.checkbox("Schedule for Future Generation", key="auto_schedule")
             
             if auto_schedule:
-                schedule_frequency = st.selectbox("Frequency", ["Daily", "Weekly", "Monthly"])
+                schedule_frequency = st.selectbox("Frequency", ["Daily", "Weekly", "Monthly"], key="schedule_frequency")
         
         # Preview and generate
         st.markdown("---")
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("👁️ Preview Report Structure"):
+            if st.button("👁️ Preview Report Structure", key="preview_report_structure"):
                 st.info("📋 Report structure preview:")
                 st.markdown("""
                 **Report Sections:**
@@ -4322,15 +4325,16 @@ def show_enterprise_reports():
                 """)
         
         with col2:
-            if st.button("💾 Save Custom Report Template"):
+            if st.button("💾 Save Custom Report Template", key="save_custom_template"):
                 if custom_report_name:
                     st.success(f"✅ Custom report '{custom_report_name}' saved!")
                 else:
                     st.error("Please enter a report name")
         
-        if st.button("🚀 Generate Custom Report", type="primary"):
+        if st.button("🚀 Generate Custom Report", type="primary", key="generate_custom_report"):
             if custom_report_name:
                 with st.spinner("Building custom report..."):
+                    import time
                     time.sleep(4)
                     st.success("✅ Custom report generated successfully!")
             else:
@@ -4375,7 +4379,7 @@ def show_enterprise_reports():
             }
         ]
         
-        for report in scheduled_reports:
+        for i, report in enumerate(scheduled_reports):
             with st.container():
                 col1, col2, col3, col4 = st.columns([3, 2, 2, 2])
                 
@@ -4394,13 +4398,13 @@ def show_enterprise_reports():
                 
                 with col4:
                     if report['status'] == "Active":
-                        if st.button("⏸️ Pause", key=f"pause_sched_{report['name']}"):
+                        if st.button("⏸️ Pause", key=f"pause_sched_{i}"):
                             st.info(f"Paused {report['name']}")
                     else:
-                        if st.button("▶️ Resume", key=f"resume_sched_{report['name']}"):
+                        if st.button("▶️ Resume", key=f"resume_sched_{i}"):
                             st.success(f"Resumed {report['name']}")
                     
-                    if st.button("⚙️ Edit", key=f"edit_sched_{report['name']}"):
+                    if st.button("⚙️ Edit", key=f"edit_sched_{i}"):
                         st.info(f"Editing {report['name']}")
                 
                 st.markdown("---")
@@ -4414,31 +4418,33 @@ def show_enterprise_reports():
             new_schedule_name = st.selectbox("Report Template", [
                 "Daily Fraud Summary", "Weekly Risk Analysis", "Monthly Trends",
                 "Quarterly Compliance", "Custom Report"
-            ])
+            ], key="new_schedule_name")
             
-            schedule_type = st.selectbox("Schedule Type", ["Daily", "Weekly", "Monthly", "Quarterly"])
+            schedule_type = st.selectbox("Schedule Type", ["Daily", "Weekly", "Monthly", "Quarterly"], key="schedule_type")
             
+            from datetime import datetime
             if schedule_type == "Daily":
-                schedule_time = st.time_input("Time", datetime.strptime("08:00", "%H:%M").time())
+                schedule_time = st.time_input("Time", datetime.strptime("08:00", "%H:%M").time(), key="schedule_time_daily")
             elif schedule_type == "Weekly":
-                schedule_day = st.selectbox("Day of Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"])
-                schedule_time = st.time_input("Time", datetime.strptime("09:00", "%H:%M").time())
+                schedule_day = st.selectbox("Day of Week", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], key="schedule_day")
+                schedule_time = st.time_input("Time", datetime.strptime("09:00", "%H:%M").time(), key="schedule_time_weekly")
             elif schedule_type == "Monthly":
-                schedule_date = st.selectbox("Day of Month", list(range(1, 29)))
-                schedule_time = st.time_input("Time", datetime.strptime("10:00", "%H:%M").time())
+                schedule_date = st.selectbox("Day of Month", list(range(1, 29)), key="schedule_date")
+                schedule_time = st.time_input("Time", datetime.strptime("10:00", "%H:%M").time(), key="schedule_time_monthly")
         
         with col2:
             recipients_input = st.text_area(
                 "Recipients (one email per line)",
-                placeholder="admin@company.com\nsecurity@company.com\nmanager@company.com"
+                placeholder="admin@company.com\nsecurity@company.com\nmanager@company.com",
+                key="recipients_input"
             )
             
-            email_subject = st.text_input("Email Subject", placeholder="Automated ReturnGuard Report")
-            email_message = st.text_area("Email Message", placeholder="Please find the attached report...")
+            email_subject = st.text_input("Email Subject", placeholder="Automated ReturnGuard Report", key="email_subject")
+            email_message = st.text_area("Email Message", placeholder="Please find the attached report...", key="email_message")
             
-            start_immediately = st.checkbox("Start immediately", value=True)
+            start_immediately = st.checkbox("Start immediately", value=True, key="start_immediately")
         
-        if st.button("📅 Schedule Report", type="primary"):
+        if st.button("📅 Schedule Report", type="primary", key="schedule_new_report"):
             if new_schedule_name and recipients_input:
                 st.success(f"✅ {new_schedule_name} scheduled successfully!")
             else:
@@ -4494,24 +4500,28 @@ def show_enterprise_reports():
             months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
             revenue_protected = [620, 730, 650, 780, 690, 847]
             
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=months,
-                y=revenue_protected,
-                mode='lines+markers',
-                name='Revenue Protected ($K)',
-                line=dict(color='#2563eb', width=4),
-                marker=dict(size=10),
-                fill='tonexty'
-            ))
-            
-            fig.update_layout(
-                title="Monthly Revenue Protection Trend",
-                xaxis_title="Month",
-                yaxis_title="Revenue Protected ($K)",
-                height=400
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            try:
+                import plotly.graph_objects as go
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    x=months,
+                    y=revenue_protected,
+                    mode='lines+markers',
+                    name='Revenue Protected ($K)',
+                    line=dict(color='#2563eb', width=4),
+                    marker=dict(size=10),
+                    fill='tonexty'
+                ))
+                
+                fig.update_layout(
+                    title="Monthly Revenue Protection Trend",
+                    xaxis_title="Month",
+                    yaxis_title="Revenue Protected ($K)",
+                    height=400
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            except:
+                st.info("📈 Revenue protection chart would be displayed here")
         
         with col2:
             # Key metrics comparison
@@ -4519,18 +4529,22 @@ def show_enterprise_reports():
             current = [94.7, 96.2, 88.5, 78.3]
             target = [95, 95, 90, 80]
             
-            fig = go.Figure()
-            fig.add_trace(go.Bar(name='Current', x=metrics, y=current, marker_color='#2563eb'))
-            fig.add_trace(go.Bar(name='Target', x=metrics, y=target, marker_color='#16a34a'))
-            
-            fig.update_layout(
-                title="Performance vs Targets",
-                xaxis_title="Metrics",
-                yaxis_title="Score (%)",
-                barmode='group',
-                height=400
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            try:
+                import plotly.graph_objects as go
+                fig = go.Figure()
+                fig.add_trace(go.Bar(name='Current', x=metrics, y=current, marker_color='#2563eb'))
+                fig.add_trace(go.Bar(name='Target', x=metrics, y=target, marker_color='#16a34a'))
+                
+                fig.update_layout(
+                    title="Performance vs Targets",
+                    xaxis_title="Metrics",
+                    yaxis_title="Score (%)",
+                    barmode='group',
+                    height=400
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            except:
+                st.info("📊 Performance comparison chart would be displayed here")
         
         # Strategic insights
         st.markdown("---")
@@ -4566,12 +4580,12 @@ def show_enterprise_reports():
             """)
         
         # Export executive summary
-        if st.button("📊 Generate Executive Summary Report", type="primary"):
+        if st.button("📊 Generate Executive Summary Report", type="primary", key="generate_executive_summary"):
             with st.spinner("Generating executive summary..."):
+                import time
                 time.sleep(3)
                 st.success("✅ Executive summary generated!")
-                st.download_button("📥 Download Executive Report", b"Executive summary content", "executive_summary.pdf")
-
+                st.download_button("📥 Download Executive Report", b"Executive summary content", "executive_summary.pdf", key="download_executive_summary")
 def show_enterprise_settings():
     """Enterprise settings and configuration"""
     
