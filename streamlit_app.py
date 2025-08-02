@@ -4947,19 +4947,80 @@ def show_enterprise_billing():
         st.session_state.billing_shown = True
         st.subheader("💳 Billing & Subscription Management")
     
-    # Current subscription overview
-    current_plan = st.session_state.user_data.get('subscription_plan', 'Professional').title()
+    # Plan definitions - must be defined first
+    plans = {
+        "Starter": {
+            "price": 49,
+            "annual_price": 470,
+            "returns_limit": 100,
+            "features": [
+                "Up to 100 returns/month",
+                "Basic fraud detection",
+                "Email alerts",
+                "Standard dashboard",
+                "Email support"
+            ]
+        },
+        "Professional": {
+            "price": 99,
+            "annual_price": 950,
+            "returns_limit": 500,
+            "features": [
+                "Up to 500 returns/month",
+                "Advanced AI analysis",
+                "Real-time alerts + SMS",
+                "Custom fraud rules",
+                "Priority support",
+                "Advanced analytics"
+            ]
+        },
+        "Business": {
+            "price": 199,
+            "annual_price": 1910,
+            "returns_limit": "Unlimited",
+            "features": [
+                "Unlimited returns",
+                "Custom AI training",
+                "Predictive forecasting",
+                "Multi-store management",
+                "API access",
+                "White-label options"
+            ]
+        },
+        "Enterprise": {
+            "price": 499,
+            "annual_price": 4790,
+            "returns_limit": "Unlimited",
+            "features": [
+                "Everything in Business",
+                "Custom AI model development",
+                "Dedicated success manager",
+                "Phone support",
+                "Custom integrations",
+                "SLA guarantees"
+            ]
+        }
+    }
+    
+    # Current subscription overview - get current plan safely
+    current_plan_raw = st.session_state.user_data.get('subscription_plan', 'professional')
+    current_plan = current_plan_raw.title()
+    
+    # Ensure the plan exists in our plans dictionary
+    if current_plan not in plans:
+        current_plan = "Professional"  # Default fallback
     
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.metric("Current Plan", current_plan)
     with col2:
-        st.metric("Monthly Cost", "$99")
+        st.metric("Monthly Cost", f"${plans[current_plan]['price']}")
     with col3:
         st.metric("Next Billing", "March 15, 2024")
     with col4:
-        st.metric("Annual Savings", "$237" if current_plan != "Enterprise" else "$597")
+        annual_savings = plans[current_plan]['price'] * 12 - plans[current_plan]['annual_price']
+        st.metric("Annual Savings", f"${annual_savings}")
     
     # Billing tabs
     tab1, tab2, tab3, tab4 = st.tabs(["💳 Current Plan", "📈 Usage & Billing", "💰 Payment Methods", "📊 Cost Analysis"])
@@ -4967,64 +5028,9 @@ def show_enterprise_billing():
     with tab1:
         st.subheader("📋 Current Subscription Details")
         
-        # Plan comparison
-        plans = {
-            "Starter": {
-                "price": 49,
-                "annual_price": 470,
-                "returns_limit": 100,
-                "features": [
-                    "Up to 100 returns/month",
-                    "Basic fraud detection",
-                    "Email alerts",
-                    "Standard dashboard",
-                    "Email support"
-                ]
-            },
-            "Professional": {
-                "price": 99,
-                "annual_price": 950,
-                "returns_limit": 500,
-                "features": [
-                    "Up to 500 returns/month",
-                    "Advanced AI analysis",
-                    "Real-time alerts + SMS",
-                    "Custom fraud rules",
-                    "Priority support",
-                    "Advanced analytics"
-                ]
-            },
-            "Business": {
-                "price": 199,
-                "annual_price": 1910,
-                "returns_limit": "Unlimited",
-                "features": [
-                    "Unlimited returns",
-                    "Custom AI training",
-                    "Predictive forecasting",
-                    "Multi-store management",
-                    "API access",
-                    "White-label options"
-                ]
-            },
-            "Enterprise": {
-                "price": 499,
-                "annual_price": 4790,
-                "returns_limit": "Unlimited",
-                "features": [
-                    "Everything in Business",
-                    "Custom AI model development",
-                    "Dedicated success manager",
-                    "Phone support",
-                    "Custom integrations",
-                    "SLA guarantees"
-                ]
-            }
-        }
-        
         # Display plan cards
         for plan_name, plan_details in plans.items():
-            is_current = plan_name.lower() == current_plan.lower()
+            is_current = plan_name == current_plan
             
             card_style = """
                 background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
@@ -5081,7 +5087,7 @@ def show_enterprise_billing():
             st.markdown("### 📊 Current Month Usage")
             
             returns_processed = 347
-            returns_limit = 500 if current_plan.lower() == "professional" else "Unlimited"
+            returns_limit = plans[current_plan]['returns_limit']
             
             if isinstance(returns_limit, int):
                 usage_percent = (returns_processed / returns_limit) * 100
@@ -5097,13 +5103,14 @@ def show_enterprise_billing():
                 'Limit': ['500', 'Unlimited', 'Unlimited', 'Unlimited']
             }
             
+            import pandas as pd
             st.dataframe(pd.DataFrame(usage_data), use_container_width=True)
         
         with col2:
             st.markdown("### 💰 Billing Summary")
             
             # Current charges
-            base_cost = plans[current_plan.title()]['price']
+            base_cost = plans[current_plan]['price']
             overage_cost = 0
             total_cost = base_cost + overage_cost
             
@@ -5115,7 +5122,7 @@ def show_enterprise_billing():
             st.write("**Next Billing Date:** March 15, 2024")
             st.write("**Payment Method:** Visa ending in 4242")
             
-            if st.button("📧 Email Invoice"):
+            if st.button("📧 Email Invoice", key="email_invoice"):
                 st.success("📧 Invoice emailed to billing contact")
         
         # Billing history
@@ -5140,37 +5147,41 @@ def show_enterprise_billing():
         returns_usage = [45, 78, 125, 234, 289, 347]
         costs = [49, 49, 49, 99, 99, 99]  # Plan changes
         
-        fig = go.Figure()
-        
-        # Returns usage
-        fig.add_trace(go.Scatter(
-            x=months,
-            y=returns_usage,
-            mode='lines+markers',
-            name='Returns Processed',
-            yaxis='y',
-            line=dict(color='#2563eb', width=3)
-        ))
-        
-        # Monthly costs
-        fig.add_trace(go.Bar(
-            x=months,
-            y=costs,
-            name='Monthly Cost ($)',
-            yaxis='y2',
-            opacity=0.7,
-            marker_color='#16a34a'
-        ))
-        
-        fig.update_layout(
-            title="Usage and Cost Trends",
-            xaxis_title="Month",
-            yaxis=dict(title="Returns Processed", side="left"),
-            yaxis2=dict(title="Monthly Cost ($)", side="right", overlaying="y"),
-            height=400
-        )
-        
-        st.plotly_chart(fig, use_container_width=True)
+        try:
+            import plotly.graph_objects as go
+            fig = go.Figure()
+            
+            # Returns usage
+            fig.add_trace(go.Scatter(
+                x=months,
+                y=returns_usage,
+                mode='lines+markers',
+                name='Returns Processed',
+                yaxis='y',
+                line=dict(color='#2563eb', width=3)
+            ))
+            
+            # Monthly costs
+            fig.add_trace(go.Bar(
+                x=months,
+                y=costs,
+                name='Monthly Cost ($)',
+                yaxis='y2',
+                opacity=0.7,
+                marker_color='#16a34a'
+            ))
+            
+            fig.update_layout(
+                title="Usage and Cost Trends",
+                xaxis_title="Month",
+                yaxis=dict(title="Returns Processed", side="left"),
+                yaxis2=dict(title="Monthly Cost ($)", side="right", overlaying="y"),
+                height=400
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+        except:
+            st.info("📈 Usage and cost trends chart would be displayed here")
     
     with tab3:
         st.subheader("💰 Payment Methods")
@@ -5224,32 +5235,32 @@ def show_enterprise_billing():
         col1, col2 = st.columns(2)
         
         with col1:
-            payment_type = st.selectbox("Payment Type", ["Credit Card", "Debit Card", "Bank Account", "PayPal"])
+            payment_type = st.selectbox("Payment Type", ["Credit Card", "Debit Card", "Bank Account", "PayPal"], key="payment_type")
             
             if payment_type in ["Credit Card", "Debit Card"]:
-                card_number = st.text_input("Card Number", placeholder="1234 5678 9012 3456")
+                card_number = st.text_input("Card Number", placeholder="1234 5678 9012 3456", key="card_number")
                 col_a, col_b = st.columns(2)
                 with col_a:
-                    expiry_month = st.selectbox("Expiry Month", list(range(1, 13)))
+                    expiry_month = st.selectbox("Expiry Month", list(range(1, 13)), key="expiry_month")
                 with col_b:
-                    expiry_year = st.selectbox("Expiry Year", list(range(2024, 2035)))
-                cvv = st.text_input("CVV", placeholder="123", type="password")
+                    expiry_year = st.selectbox("Expiry Year", list(range(2024, 2035)), key="expiry_year")
+                cvv = st.text_input("CVV", placeholder="123", type="password", key="cvv")
         
         with col2:
             # Billing address
             st.markdown("**Billing Address**")
-            billing_name = st.text_input("Name on Card", placeholder="John Doe")
-            billing_address = st.text_input("Address")
+            billing_name = st.text_input("Name on Card", placeholder="John Doe", key="billing_name")
+            billing_address = st.text_input("Address", key="billing_address")
             col_a, col_b = st.columns(2)
             with col_a:
-                billing_city = st.text_input("City")
+                billing_city = st.text_input("City", key="billing_city")
             with col_b:
-                billing_zip = st.text_input("ZIP Code")
+                billing_zip = st.text_input("ZIP Code", key="billing_zip")
             
-            make_primary = st.checkbox("Make this primary payment method")
-            enable_auto_pay = st.checkbox("Enable auto-pay", value=True)
+            make_primary = st.checkbox("Make this primary payment method", key="make_primary")
+            enable_auto_pay = st.checkbox("Enable auto-pay", value=True, key="enable_auto_pay")
         
-        if st.button("💳 Add Payment Method", type="primary"):
+        if st.button("💳 Add Payment Method", type="primary", key="add_payment_method"):
             st.success("✅ Payment method added successfully!")
         
         # Payment settings
@@ -5259,14 +5270,14 @@ def show_enterprise_billing():
         col1, col2 = st.columns(2)
         
         with col1:
-            auto_pay_enabled = st.checkbox("Enable automatic payments", value=True)
-            failed_payment_retries = st.slider("Failed payment retry attempts", 1, 5, 3)
-            payment_notifications = st.checkbox("Email payment notifications", value=True)
+            auto_pay_enabled = st.checkbox("Enable automatic payments", value=True, key="auto_pay_enabled")
+            failed_payment_retries = st.slider("Failed payment retry attempts", 1, 5, 3, key="failed_payment_retries")
+            payment_notifications = st.checkbox("Email payment notifications", value=True, key="payment_notifications")
         
         with col2:
-            billing_contact = st.text_input("Billing contact email", value="billing@company.com")
-            invoice_delivery = st.selectbox("Invoice delivery", ["Email", "Postal Mail", "Both"])
-            currency_preference = st.selectbox("Billing currency", ["USD", "EUR", "GBP"])
+            billing_contact = st.text_input("Billing contact email", value="billing@company.com", key="billing_contact")
+            invoice_delivery = st.selectbox("Invoice delivery", ["Email", "Postal Mail", "Both"], key="invoice_delivery")
+            currency_preference = st.selectbox("Billing currency", ["USD", "EUR", "GBP"], key="currency_preference")
     
     with tab4:
         st.subheader("📊 Cost Analysis & Optimization")
@@ -5278,7 +5289,7 @@ def show_enterprise_billing():
             st.markdown("### 💰 Return on Investment")
             
             # Calculate ROI
-            monthly_cost = plans[current_plan.title()]['price']
+            monthly_cost = plans[current_plan]['price']
             annual_cost = monthly_cost * 12
             fraud_prevented = 847000  # From sample data
             processing_savings = 45200
@@ -5303,23 +5314,28 @@ def show_enterprise_billing():
             values = [annual_cost, fraud_prevented, processing_savings, total_savings - annual_cost]
             colors = ['#dc2626', '#16a34a', '#2563eb', '#f59e0b']
             
-            fig = go.Figure(data=[go.Bar(x=categories, y=values, marker_color=colors)])
-            fig.update_layout(
-                title="Annual Cost vs Benefits Analysis",
-                yaxis_title="Amount ($)",
-                showlegend=False,
-                height=400
-            )
-            st.plotly_chart(fig, use_container_width=True)
+            try:
+                import plotly.graph_objects as go
+                fig = go.Figure(data=[go.Bar(x=categories, y=values, marker_color=colors)])
+                fig.update_layout(
+                    title="Annual Cost vs Benefits Analysis",
+                    yaxis_title="Amount ($)",
+                    showlegend=False,
+                    height=400
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            except:
+                st.info("📊 Cost vs benefits chart would be displayed here")
         
         # Cost optimization recommendations
         st.markdown("### 💡 Cost Optimization Recommendations")
         
+        annual_savings = plans[current_plan]['price']*12 - plans[current_plan]['annual_price']
         recommendations = [
             {
                 "title": "Annual Billing Discount",
-                "description": f"Switch to annual billing to save ${plans[current_plan.title()]['price']*12 - plans[current_plan.title()]['annual_price']} per year",
-                "savings": f"${plans[current_plan.title()]['price']*12 - plans[current_plan.title()]['annual_price']}",
+                "description": f"Switch to annual billing to save ${annual_savings} per year",
+                "savings": f"${annual_savings}",
                 "effort": "Low"
             },
             {
@@ -5352,33 +5368,37 @@ def show_enterprise_billing():
         months_ahead = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep']
         forecasted_usage = [420, 485, 520, 580, 630, 690]
         
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=months_ahead,
-            y=forecasted_usage,
-            mode='lines+markers',
-            name='Forecasted Usage',
-            line=dict(color='#2563eb', width=3, dash='dash')
-        ))
-        
-        # Add plan limits
-        if current_plan.lower() == "professional":
-            fig.add_hline(y=500, line_dash="solid", line_color="red", 
-                         annotation_text="Professional Plan Limit (500)")
-        
-        fig.update_layout(
-            title="6-Month Usage Forecast",
-            xaxis_title="Month",
-            yaxis_title="Predicted Returns",
-            height=400
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        try:
+            import plotly.graph_objects as go
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=months_ahead,
+                y=forecasted_usage,
+                mode='lines+markers',
+                name='Forecasted Usage',
+                line=dict(color='#2563eb', width=3, dash='dash')
+            ))
+            
+            # Add plan limits
+            if current_plan == "Professional":
+                fig.add_hline(y=500, line_dash="solid", line_color="red", 
+                             annotation_text="Professional Plan Limit (500)")
+            
+            fig.update_layout(
+                title="6-Month Usage Forecast",
+                xaxis_title="Month",
+                yaxis_title="Predicted Returns",
+                height=400
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        except:
+            st.info("📈 Usage forecast chart would be displayed here")
         
         # Plan recommendations based on forecast
-        if current_plan.lower() == "professional" and max(forecasted_usage) > 500:
+        if current_plan == "Professional" and max(forecasted_usage) > 500:
             st.warning("⚠️ **Plan Upgrade Recommended:** Your forecasted usage will exceed the Professional plan limit. Consider upgrading to Business plan.")
             
-            if st.button("🚀 Upgrade to Business Plan"):
+            if st.button("🚀 Upgrade to Business Plan", key="upgrade_to_business"):
                 st.success("✅ Upgraded to Business plan to accommodate growth!")
 
 if __name__ == "__main__":
